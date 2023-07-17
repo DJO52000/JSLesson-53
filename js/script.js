@@ -56,19 +56,19 @@ function playNotes() {
     })
     //part where we adding actual audio, including new Audio on first line of the entirely code
     const activeNotes = NOTE_DETAILS.filter((n) => n.active)
-    const gain = 1 / activeNotes.length
+    const gain = 1 / activeNotes.length//this will split sound strength to always bee 100% together
     activeNotes.forEach((n) => {
-        startNote(n)
+        startNote(n, gain)
     })
 }
 
 function startNote(noteDetail, gain) {
     const gainNode = audioContext.createGain()
-    gainNode.gain.value = gain
+    gainNode.gain.value = gain//add value to gain
     const oscillator = audioContext.createOscillator()
-    oscillator.frequency = noteDetail.frequency
+    oscillator.frequency.value = noteDetail.frequency//value take frequency from code
     oscillator.type = "sine" // savtooth will gave another sound
-    oscillator.connect(audioContext.destination) //destination is speaker
+    oscillator.connect(gainNode).connect(audioContext.destination) //destination is speaker//gainNode add last
     oscillator.start() //start sound
     noteDetail.oscillator = oscillator //this add oscillator to the global var noteDetail
 }
