@@ -1,3 +1,5 @@
+const audioContext = new AudioContext() //added with real audio on line 55
+
 const NOTE_DETAILS = [
     { note: "C", key: "Z", frequency: 261.626 },
     { note: "Db", key: "S", frequency: 277.183 },
@@ -12,3 +14,61 @@ const NOTE_DETAILS = [
     { note: "Bb", key: "J", frequency: 466.164 },
     { note: "B", key: "M", frequency: 493.883 },
 ]
+
+document.addEventListener("keydown", (e) => {
+    if (e.repeat) return // guard close - he will skip code after once been called
+    // console.log('down')
+    // console.log(e)//you see inside event object exist repeat property,
+    // //if you hold button it will repeat call again and again, add if guard close
+    const keyboardKey = e.code
+    const noteDetail = getNoteDetail(keyboardKey)
+    // console.log(noteDetail)//if not exist we add code down and skip code after
+    if (noteDetail == null) return
+    noteDetail.active = true //add to NOTE_DETAILS active sound
+    playNotes() // calling function to add sound
+})
+
+document.addEventListener("keyup", (e) => {
+    // console.log('up')
+    // console.log(e)
+    const keyboardKey = e.code
+    const noteDetail = getNoteDetail(keyboardKey)
+    if (noteDetail == null) return
+    noteDetail.active = false //add to NOTE_DETAILS deactivate sound
+    playNotes()
+})
+
+function getNoteDetail(keyboardKey) {
+    return NOTE_DETAILS.find((n) => `Key${n.key}` === keyboardKey) //keyboardKey is property of keyboard event
+}
+
+function playNotes() {
+    // console.log('play notes')
+    NOTE_DETAILS.forEach((n) => {
+        const keyElement = document.querySelector(`[data-note="${n.note}"]`)
+        // console.log(keyElement)
+        keyElement.classList.toggle("active", n.active || false) //without false it will select all,
+        //adding to NOTE_DETAILS for every note "active:false" will gave same result
+        if (n.oscillator != null) {
+            n.oscillator.stop() //stop sound
+            n.oscillator.disconnect() //disconnect rest to oscillator
+        }
+    })
+    //part where we adding actual audio, including new Audio on first line of the entirely code
+    const activeNotes = NOTE_DETAILS.filter((n) => n.active)
+    const gain = 1 / activeNotes.length
+    activeNotes.forEach((n) => {
+        startNote(n)
+    })
+}
+
+function startNote(noteDetail, gain) {
+    const gainNode = audioContext.createGain()
+    gainNode.gain.value = gain
+    const oscillator = audioContext.createOscillator()
+    oscillator.frequency = noteDetail.frequency
+    oscillator.type = "sine" // savtooth will gave another sound
+    oscillator.connect(audioContext.destination) //destination is speaker
+    oscillator.start() //start sound
+    noteDetail.oscillator = oscillator //this add oscillator to the global var noteDetail
+}
